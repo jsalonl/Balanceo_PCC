@@ -8,14 +8,16 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
 
-    <title>Balanceo NTH</title>
+    <title>Balanceo PCC</title>
   </head>
   <body>
     <body class="bg-light">
     <div class="container">
       <div class="py-5 text-center">
         <h2>Balanceo PCC RouterBoard Mikrotik</h2>
-        <p class="lead">Llene los datos que se piden a continuación, el formulario le dara un código que usted debe copiar y pegar en su terminal de Mikrotik.</p>
+        <p class="lead">Llene los datos que se piden a continuación, el formulario le dara un código que usted debe copiar y pegar en su terminal de Mikrotik.
+        <br>Las interfaces WAN deben ser nombradas en su mikrotik como ISP1, ISP2, ISP3, ISP4, etc
+        </p>
       </div>
 
   <div class="row">
@@ -174,10 +176,86 @@
             html+='add chain=srcnat out-interface=ISP2 action=masquerade<br>';
             break;
           case '3':
-            
+            html+='#Balanceo PCC 3 Proveedores<br>';
+            html+=':global GW1 "'+gw1+'"<br>';
+            html+=':global GW2 "'+gw2+'"<br>';
+            html+=':global GW3 "'+gw3+'"<br>';
+            html+=':global Local "'+local+'"<br>';
+            html+='<br>';
+            html+='/ip firewall mangle<br>';
+            html+='add chain=prerouting in-interface=ISP1 connection-mark=no-mark action=mark-connection new-connection-mark=ISP1_conn<br>';
+            html+='add chain=prerouting in-interface=ISP2 connection-mark=no-mark action=mark-connection new-connection-mark=ISP2_conn<br>';
+            html+='add chain=prerouting in-interface=ISP3 connection-mark=no-mark action=mark-connection new-connection-mark=ISP3_conn<br>';
+            html+='<br>';
+            html+='add chain=prerouting  in-interface=$Local connection-mark=no-mark dst-address-type=!local per-connection-classifier=both-addresses:3/0 action=mark-connection new-connection-mark=ISP1_conn <br>';
+            html+='add chain=prerouting  in-interface=$Local connection-mark=no-mark dst-address-type=!local per-connection-classifier=both-addresses:3/1 action=mark-connection new-connection-mark=ISP2_conn<br>';
+            html+='add chain=prerouting  in-interface=$Local connection-mark=no-mark dst-address-type=!local per-connection-classifier=both-addresses:3/2 action=mark-connection new-connection-mark=ISP3_conn<br>';
+            html+='<br>';
+            html+='add chain=prerouting connection-mark=ISP1_conn in-interface=$Local action=mark-routing new-routing-mark=to_ISP1<br>';
+            html+='add chain=prerouting connection-mark=ISP2_conn in-interface=$Local action=mark-routing new-routing-mark=to_ISP2<br>';
+            html+='add chain=prerouting connection-mark=ISP3_conn in-interface=$Local action=mark-routing new-routing-mark=to_ISP3<br>';
+            html+='<br>';
+            html+='add chain=output connection-mark=ISP1_conn action=mark-routing new-routing-mark=to_ISP1<br>';
+            html+='add chain=output connection-mark=ISP2_conn action=mark-routing new-routing-mark=to_ISP2<br>';
+            html+='add chain=output connection-mark=ISP3_conn action=mark-routing new-routing-mark=to_ISP3<br>';
+            html+='<br>';
+            html+='/ ip route<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW1 routing-mark=to_ISP1 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW2 routing-mark=to_ISP2 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW3 routing-mark=to_ISP3 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW1 distance=1 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW2 distance=2 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW3 distance=3 check-gateway=ping<br>';
+            html+='<br>';
+            html+='/ip firewall nat<br>';
+            html+='add chain=srcnat out-interface=ISP1 action=masquerade<br>';
+            html+='add chain=srcnat out-interface=ISP2 action=masquerade<br>';
+            html+='add chain=srcnat out-interface=ISP3 action=masquerade<br>';
             break;
           case '4':
-            
+            html+='#Balanceo PCC 4 Proveedores<br>';
+            html+=':global GW1 "'+gw1+'"<br>';
+            html+=':global GW2 "'+gw2+'"<br>';
+            html+=':global GW3 "'+gw3+'"<br>';
+            html+=':global GW3 "'+gw4+'"<br>';
+            html+=':global Local "'+local+'"<br>';
+            html+='<br>';
+            html+='/ip firewall mangle<br>';
+            html+='add chain=prerouting in-interface=ISP1 connection-mark=no-mark action=mark-connection new-connection-mark=ISP1_conn<br>';
+            html+='add chain=prerouting in-interface=ISP2 connection-mark=no-mark action=mark-connection new-connection-mark=ISP2_conn<br>';
+            html+='add chain=prerouting in-interface=ISP3 connection-mark=no-mark action=mark-connection new-connection-mark=ISP3_conn<br>';
+            html+='add chain=prerouting in-interface=ISP4 connection-mark=no-mark action=mark-connection new-connection-mark=ISP4_conn<br>';
+            html+='<br>';
+            html+='add chain=prerouting  in-interface=$Local connection-mark=no-mark dst-address-type=!local per-connection-classifier=both-addresses:4/0 action=mark-connection new-connection-mark=ISP1_conn <br>';
+            html+='add chain=prerouting  in-interface=$Local connection-mark=no-mark dst-address-type=!local per-connection-classifier=both-addresses:4/1 action=mark-connection new-connection-mark=ISP2_conn<br>';
+            html+='add chain=prerouting  in-interface=$Local connection-mark=no-mark dst-address-type=!local per-connection-classifier=both-addresses:4/2 action=mark-connection new-connection-mark=ISP3_conn<br>';
+            html+='add chain=prerouting  in-interface=$Local connection-mark=no-mark dst-address-type=!local per-connection-classifier=both-addresses:4/3 action=mark-connection new-connection-mark=ISP4_conn<br>';
+            html+='<br>';
+            html+='add chain=prerouting connection-mark=ISP1_conn in-interface=$Local action=mark-routing new-routing-mark=to_ISP1<br>';
+            html+='add chain=prerouting connection-mark=ISP2_conn in-interface=$Local action=mark-routing new-routing-mark=to_ISP2<br>';
+            html+='add chain=prerouting connection-mark=ISP3_conn in-interface=$Local action=mark-routing new-routing-mark=to_ISP3<br>';
+            html+='add chain=prerouting connection-mark=ISP4_conn in-interface=$Local action=mark-routing new-routing-mark=to_ISP4<br>';
+            html+='<br>';
+            html+='add chain=output connection-mark=ISP1_conn action=mark-routing new-routing-mark=to_ISP1<br>';
+            html+='add chain=output connection-mark=ISP2_conn action=mark-routing new-routing-mark=to_ISP2<br>';
+            html+='add chain=output connection-mark=ISP3_conn action=mark-routing new-routing-mark=to_ISP3<br>';
+            html+='add chain=output connection-mark=ISP4_conn action=mark-routing new-routing-mark=to_ISP4<br>';
+            html+='<br>';
+            html+='/ ip route<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW1 routing-mark=to_ISP1 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW2 routing-mark=to_ISP2 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW3 routing-mark=to_ISP3 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW4 routing-mark=to_ISP4 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW1 distance=1 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW2 distance=2 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW3 distance=3 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW4 distance=4 check-gateway=ping<br>';
+            html+='<br>';
+            html+='/ip firewall nat<br>';
+            html+='add chain=srcnat out-interface=ISP1 action=masquerade<br>';
+            html+='add chain=srcnat out-interface=ISP2 action=masquerade<br>';
+            html+='add chain=srcnat out-interface=ISP3 action=masquerade<br>';
+            html+='add chain=srcnat out-interface=ISP4 action=masquerade<br>';
             break;
         }
         $('#result').html(html);

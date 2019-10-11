@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <title>Balanceo NTH</title>
+  </head>
+  <body>
+    <body class="bg-light">
+    <div class="container">
+      <div class="py-5 text-center">
+        <h2>Balanceo PCC RouterBoard Mikrotik</h2>
+        <p class="lead">Llene los datos que se piden a continuación, el formulario le dara un código que usted debe copiar y pegar en su terminal de Mikrotik.</p>
+      </div>
+
+  <div class="row">
+    <div class="col-md-6 order-md-1">
+      <h4 class="mb-3">Datos Generales</h4>
+      <form id="code">
+        <div class="row">
+          <div class="col-md-6">
+            <p style="display:inline">Número de proveedores: </p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="custom-control custom-radio" style="display:inline">
+              <input id="GWS1" name="GWS" type="radio" class="custom-control-input" value="2" checked="" required="">
+              <label class="custom-control-label" for="GWS1">2</label>
+            </div>
+            <div class="custom-control custom-radio" style="display:inline">
+              <input id="GWS2" name="GWS" type="radio" class="custom-control-input" value="3" required="">
+              <label class="custom-control-label" for="GWS2">3</label>
+            </div>
+            <div class="custom-control custom-radio" style="display:inline">
+              <input id="GWS3" name="GWS" type="radio" class="custom-control-input" value="4" required="">
+              <label class="custom-control-label" for="GWS3">4</label>
+            </div>
+          </div>
+          <div class="col-md-12 mb-3">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="firstName">Nombre de la interfaz LOCAL</label>
+              </div>
+              <div class="col-md-6">
+                <input type="text" class="form-control" id="local" placeholder="ether5" required>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12 mb-3">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="firstName">Puerta de enlace 1 (Proveedor Principal)</label>
+              </div>
+              <div class="col-md-6">
+                <input type="tel" class="form-control" id="gw1" required>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12 mb-3">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="firstName">Puerta de enlace 2</label>
+              </div>
+              <div class="col-md-6">
+                <input type="tel" class="form-control" id="gw2">
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12 mb-3" id="3" style="display:none">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="firstName">Puerta de enlace 3</label>
+              </div>
+              <div class="col-md-6">
+                <input type="tel" class="form-control" id="gw3">
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12 mb-3" id="4" style="display:none">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="firstName">Puerta de enlace 4</label>
+              </div>
+              <div class="col-md-6">
+                <input type="tel" class="form-control" id="gw4">
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="mb-4">
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Generar código</button>
+      </form>
+    </div>
+    <div class="col-md-6 order-md-2">
+      <h4 class="mb-3">Resultado : </h4>
+      <label>Copie este código y péguelo en su terminal Mikrotik</label>
+      <div class="card">
+        <div class="card-body">
+          <pre id="result">
+
+          </pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="my-5 pt-5 text-muted text-center text-small">
+    <p class="mb-1">&copy; 2019 Salomón Nieto</p>
+  </footer>
+</div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="js/jquery-3.4.1.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+    $('Document').ready(function(){
+      $('input[type=radio][name=GWS]').on('change', function() {
+        GWS = $(this).val();
+        switch ($(this).val()) {
+          case '2':
+            $('#3,#4').fadeOut();
+            break;
+          case '3':
+            $('#3').fadeIn();
+            break;
+          case '4':
+            $('#3,#4').fadeIn();
+            break;
+        }
+      });
+      $('#code').submit(function(e){
+        e.preventDefault;
+        var GWS = $('input[type=radio][name=GWS]:checked').val();
+        var local = $('#local').val();
+        var gw1 = $('#gw1').val();
+        var gw2 = $('#gw2').val();
+        var gw3 = $('#gw3').val();
+        var gw4 = $('#gw4').val();
+        var html = '';
+        switch (GWS) {
+          case '2':
+            html+='#Balanceo PCC 2 Proveedores<br>';
+            html+=':global GW1 "'+gw1+'"<br>';
+            html+=':global GW2 "'+gw2+'"<br>';
+            html+=':global Local "'+local+'"<br>';
+            html+='<br>';
+            html+='/ip firewall mangle<br>';
+            html+='add chain=prerouting in-interface=ISP1 connection-mark=no-mark action=mark-connection new-connection-mark=ISP1_conn<br>';
+            html+='add chain=prerouting in-interface=ISP2 connection-mark=no-mark action=mark-connection new-connection-mark=ISP2_conn<br>';
+            html+='<br>';
+            html+='add chain=prerouting  in-interface=$Local connection-mark=no-mark dst-address-type=!local per-connection-classifier=both-addresses:2/0 action=mark-connection new-connection-mark=ISP1_conn <br>';
+            html+='add chain=prerouting  in-interface=$Local connection-mark=no-mark dst-address-type=!local per-connection-classifier=both-addresses:2/1 action=mark-connection new-connection-mark=ISP2_conn<br>';
+            html+='<br>';
+            html+='add chain=prerouting connection-mark=ISP1_conn in-interface=$Local action=mark-routing new-routing-mark=to_ISP1<br>';
+            html+='add chain=prerouting connection-mark=ISP2_conn in-interface=$Local action=mark-routing new-routing-mark=to_ISP2<br>';
+            html+='<br>';
+            html+='add chain=output connection-mark=ISP1_conn action=mark-routing new-routing-mark=to_ISP1<br>';
+            html+='add chain=output connection-mark=ISP2_conn action=mark-routing new-routing-mark=to_ISP2<br>';
+            html+='<br>';
+            html+='/ ip route<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW1 routing-mark=to_ISP1 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW2 routing-mark=to_ISP2 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW1 distance=1 check-gateway=ping<br>';
+            html+='add dst-address=0.0.0.0/0 gateway=$GW2 distance=2 check-gateway=ping<br>';
+            html+='<br>';
+            html+='/ip firewall nat<br>';
+            html+='add chain=srcnat out-interface=ISP1 action=masquerade<br>';
+            html+='add chain=srcnat out-interface=ISP2 action=masquerade<br>';
+            break;
+          case '3':
+            
+            break;
+          case '4':
+            
+            break;
+        }
+        $('#result').html(html);
+        return false;
+      });
+    });
+    </script>
+  </body>
+</html>
